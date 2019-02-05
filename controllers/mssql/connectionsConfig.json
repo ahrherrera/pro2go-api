@@ -1,0 +1,11 @@
+[{
+    "freeAgent": {
+        "user": "userE2Pro2Go",
+        "password": "vuL460w%",
+        "server": "mi3-wsq3.a2hosting.com",
+        "database": "E2Outlook_Pro2GoApp",
+        "options": {
+            "encrypt": true
+        }
+    }
+}]
