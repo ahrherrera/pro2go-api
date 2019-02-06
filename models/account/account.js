@@ -23,6 +23,8 @@ exports.testConnection = function(req) {
 
 exports.login = function(req) {
     return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
 
         var conn = config.findConfig();
 
@@ -70,6 +72,8 @@ exports.login = function(req) {
 
 exports.register = function(req) {
     return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
 
         var conn = config.findConfig();
 
@@ -97,14 +101,14 @@ exports.register = function(req) {
                 if (mainKey.message == "Username already exists") {
                     data.msg.Code = 400;
                     data.msg.Message = mainKey.message;
-                    publish.publisher(res, data);
                     sql.close();
+                    return reject(err);
                 } else {
                     jwt.sign(JSON.parse(mainKey[selectedKey]), 'cKWM5oINGy', (err, token) => {
                         data = {
                             token: token
                         };
-                        publish.publisher(res, data);
+                        return resolve(data);
                     });
                     sql.close();
                 }
@@ -112,14 +116,14 @@ exports.register = function(req) {
                 data.msg.Code = 500;
                 //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                 data.msg.Message = err.message;
-                publish.publisher(res, data);
                 sql.close();
+                return reject(err);
             });
         }).catch(function(err) {
             data.msg.Code = 500;
             data.msg.Message = err.message;
-            publish.publisher(res, data);
             sql.close();
+            return reject(err);
         });
     });
 };
