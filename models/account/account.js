@@ -77,6 +77,9 @@ exports.register = function(req) {
 
         var conn = config.findConfig();
 
+        //req.files.profilePic
+
+        //req.files.certificate
         sql.connect(conn).then(function() {
             var request = new sql.Request();
             request.input('FirstName', sql.VarChar(150), req.body.FirstName);
@@ -90,6 +93,9 @@ exports.register = function(req) {
             request.input('password', sql.VarChar(100), req.body.password);
             request.input('state', sql.VarChar(100), req.body.state);
             request.input('city', sql.VarChar(100), req.body.city);
+
+            request.input('picUrl', sql.VarChar(300), req.file.destination + "/" + req.files.profilePic.filename);
+            request.input('CertificateURL', sql.VarChar(300), req.file.destination + "/" + req.files.certificate.filename);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
