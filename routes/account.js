@@ -7,14 +7,14 @@ var multer = require('multer');
 const picStorage = multer.diskStorage({
     destination: function(req, file, cb) {
         console.log(file);
-        if(file.mimetype === 'image/jpeg' || file.mimetype === 'image/png'){
+        if(file.mimetype === 'image/png' || file.mimetype === 'image/jpeg'){
             cb(null, 'public/images');
         }else{
             cb(null, 'public/docs');
         }
     },
     filename: function(req, file, cb) {
-        cb(null, file.originalname);
+        cb(null, Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + file.originalname);
     }
 });
 
