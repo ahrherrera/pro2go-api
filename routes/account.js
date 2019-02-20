@@ -31,7 +31,7 @@ const picFilter = (req, file, cb) => {
 const Picupload = multer({
     storage: picStorage,
     limits: {
-        fileSize: 1024 * 1024 * 5
+        fileSize: 1024 * 1024 * 10
     },
     fileFilter: picFilter
 });
