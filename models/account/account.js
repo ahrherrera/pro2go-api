@@ -94,8 +94,8 @@ exports.register = function(req) {
             request.input('state', sql.VarChar(100), req.body.state);
             request.input('city', sql.VarChar(100), req.body.city);
 
-            request.input('picUrl', sql.VarChar(300), req.file.destination + "/" + req.files.profilePic.filename);
-            request.input('CertificateURL', sql.VarChar(300), req.file.destination + "/" + req.files.certificate.filename);
+            request.input('picUrl', sql.VarChar(300), req.body.picUrl);
+            request.input('CertificateURL', sql.VarChar(300), req.body.certificate);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
@@ -131,5 +131,17 @@ exports.register = function(req) {
             sql.close();
             return reject(err);
         });
+    });
+};
+
+exports.upload = function (req) {
+    return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+        console.log(req);
+        if (req.file) {
+            console.log(req.file);
+            return resolve({ response: req.file.destination + "/" + req.file.filename });
+        } else {
+            return reject({ response: "Error uploading" })
+        }
     });
 };

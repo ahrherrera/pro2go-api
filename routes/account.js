@@ -7,10 +7,10 @@ var multer = require('multer');
 const picStorage = multer.diskStorage({
     destination: function(req, file, cb) {
         console.log(file);
-        if(file.fieldname ==='certificate'){
-            cb(null, 'public/docs');
-        }else if(file.fieldname === 'profilePic'){
+        if(file.mimetype === 'image/jpeg' || file.mimetype === 'image/png'){
             cb(null, 'public/images');
+        }else{
+            cb(null, 'public/docs');
         }
         
     },
@@ -76,9 +76,28 @@ router.post("/login", function(req, res, next) {
         });
 });
 
-router.post("/register", Picupload.fields([{ name: 'profilePic', maxCount: 1 }, { name: 'certificate', maxCount: 1 }]) , function(req, res, next) {
+router.post("/register", function(req, res, next) {
     accountModel // call the promise
         .register(req)
+        .then(
+            function(response) { //success
+                console.log("Success!");
+                res.send(response); //return the data
+            },
+            function(error) { //failed
+                console.error("Failed!", error);
+                res.status(404).send(error); //return error with 404
+            }
+        )
+        .catch(function(ex) { //exception
+            console.error("Exception!", ex);
+            res.status(500).send(ex); //return exception with 500
+        });
+});
+
+router.post("/upload", Picupload.single('file'), function(req, res, next) {
+    accountModel // call the promise
+        .upload(req)
         .then(
             function(response) { //success
                 console.log("Success!");
