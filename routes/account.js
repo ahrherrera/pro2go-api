@@ -12,10 +12,9 @@ const picStorage = multer.diskStorage({
         }else{
             cb(null, 'public/docs');
         }
-        
     },
     filename: function(req, file, cb) {
-        cb(null, Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + file.originalname);
+        cb(null, file.originalname);
     }
 });
 
