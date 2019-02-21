@@ -70,7 +70,7 @@ exports.login = function(req) {
     });
 };
 
-exports.register = function(req) {
+exports.registerContractor = function(req) {
     return new Promise((resolve, reject) => { //return promise, callbacks are bad!
         var data = {};
         data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
@@ -82,17 +82,18 @@ exports.register = function(req) {
         //req.files.certificate
         sql.connect(conn).then(function() {
             var request = new sql.Request();
-            request.input('FirstName', sql.VarChar(150), req.body.FirstName);
-            request.input('LastName', sql.VarChar(150), req.body.LastName);
+            request.input('Names', sql.VarChar(150), req.body.Names);
             request.input('Email', sql.VarChar(100), req.body.Email);
             request.input('phone', sql.VarChar(15), req.body.phone);
-            request.input('ServiceID', sql.Int, req.body.serviceID);
-            request.input('TypeID', sql.Int, req.body.TypeID);
-            request.input('birthday', sql.Date, req.body.birthday);
+            request.input('Services', sql.NVarChar(sql.MAX), req.body.Services);
             request.input('username', sql.VarChar(150), req.body.username);
             request.input('password', sql.VarChar(100), req.body.password);
             request.input('state', sql.VarChar(100), req.body.state);
             request.input('city', sql.VarChar(100), req.body.city);
+            request.input('profilePic', sql.VarChar(300), req.body.profilePic);
+            request.input('certificateUrl', sql.VarChar(300), req.body.certificateUrl);
+            request.input('budget', sql.VarChar(100), req.body.budget);
+            request.input('availability', sql.VarChar(100), req.body.availability);
 
             request.input('picUrl', sql.VarChar(300), req.body.picUrl);
             request.input('CertificateURL', sql.VarChar(300), req.body.certificate);

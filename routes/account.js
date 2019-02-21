@@ -75,9 +75,9 @@ router.post("/login", function(req, res, next) {
         });
 });
 
-router.post("/register", function(req, res, next) {
+router.post("/registerContractor", function(req, res, next) {
     accountModel // call the promise
-        .register(req)
+        .registerContractor(req)
         .then(
             function(response) { //success
                 console.log("Success!");
