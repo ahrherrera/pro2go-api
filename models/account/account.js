@@ -76,27 +76,24 @@ exports.registerContractor = function(req) {
         data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
 
         var conn = config.findConfig();
-
-        //req.files.profilePic
-
-        //req.files.certificate
         sql.connect(conn).then(function() {
             var request = new sql.Request();
             request.input('Names', sql.VarChar(150), req.body.Names);
             request.input('Email', sql.VarChar(100), req.body.Email);
             request.input('phone', sql.VarChar(15), req.body.phone);
             request.input('Services', sql.NVarChar(sql.MAX), req.body.Services);
+            request.input('TypeID', sql.Int, req.body.type);
             request.input('username', sql.VarChar(150), req.body.username);
             request.input('password', sql.VarChar(100), req.body.password);
             request.input('state', sql.VarChar(100), req.body.state);
             request.input('city', sql.VarChar(100), req.body.city);
-            request.input('profilePic', sql.VarChar(300), req.body.profilePic);
-            request.input('certificateUrl', sql.VarChar(300), req.body.certificateUrl);
+            request.input('picUrl', sql.VarChar(300), req.body.profilePic);
+            request.input('CertificateURL', sql.VarChar(300), req.body.certificateUrl);
             request.input('budget', sql.VarChar(100), req.body.budget);
             request.input('availability', sql.VarChar(100), req.body.availability);
-
-            request.input('picUrl', sql.VarChar(300), req.body.picUrl);
-            request.input('CertificateURL', sql.VarChar(300), req.body.certificate);
+            request.input('hire', sql.Bit, null);
+            request.input('bid', sql.Bit, null);
+            request.input('timeFrame', sql.VarChar(300), null);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
