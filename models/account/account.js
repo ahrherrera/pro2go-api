@@ -108,7 +108,7 @@ exports.registerContractor = function(req) {
                     sql.close();
                     return reject(err);
                 } else {
-                    jwt.sign(JSON.parse(mainKey[selectedKey]), 'cKWM5oINGy', (err, token) => {
+                    jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
                         data = {
                             token: token
                         };
