@@ -33,7 +33,7 @@ exports.login = function(req) {
             request.input('Username', sql.VarChar(50), req.body.Username);
             request.input('Password', sql.VarChar(100), req.body.Password);
 
-            req.execute("[dbo].[sp_Login]").then(function(recordsets) {
+            request.execute("[dbo].[sp_Login]").then(function(recordsets) {
                 let rows = recordsets.recordset;
                 var mainKey = rows[0];
                 var selectedKey;
@@ -44,7 +44,7 @@ exports.login = function(req) {
                     sql.close();
                     data.msg.Code = 400;
                     data.msg.Message = mainKey.Mensaje;
-                    return reject(data);
+                    return resolve(data);
                 } else {
                     sql.close();
                     jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
