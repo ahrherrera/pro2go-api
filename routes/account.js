@@ -7,9 +7,9 @@ var multer = require('multer');
 const picStorage = multer.diskStorage({
     destination: function(req, file, cb) {
         console.log(file);
-        if(file.mimetype === 'image/png' || file.mimetype === 'image/jpeg'){
+        if (file.mimetype === 'image/png' || file.mimetype === 'image/jpeg') {
             cb(null, 'public/images');
-        }else{
+        } else {
             cb(null, 'public/docs');
         }
     },
@@ -78,6 +78,25 @@ router.post("/login", function(req, res, next) {
 router.post("/registerContractor", function(req, res, next) {
     accountModel // call the promise
         .registerContractor(req)
+        .then(
+            function(response) { //success
+                console.log("Success!");
+                res.send(response); //return the data
+            },
+            function(error) { //failed
+                console.error("Failed!", error);
+                res.status(404).send(error); //return error with 404
+            }
+        )
+        .catch(function(ex) { //exception
+            console.error("Exception!", ex);
+            res.status(500).send(ex); //return exception with 500
+        });
+});
+
+router.post("/registerCustomer", function(req, res, next) {
+    accountModel // call the promise
+        .registerCustomer(req)
         .then(
             function(response) { //success
                 console.log("Success!");
