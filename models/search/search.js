@@ -21,19 +21,15 @@ exports.search = function(req) {
                 } else {
                     sql.connect(conn).then(function() {
                         var request = new sql.Request();
-                        request.input('profile_id', sql.Int, authData.User.Profile.id);
+                        request.input('ProfileID', sql.Int, authData.User.Profile.id);
                         request.input('Service', sql.Int, req.body.service);
                         request.input('Type', sql.Int, req.body.type);
 
                         request.execute("[dbo].sp_Search").then(function(recordsets) {
+
+                            console.log(recordsets);
                             let rows = recordsets.recordset;
-                            var mainKey = rows[0];
-                            var selectedKey;
-                            for (var key in mainKey) {
-                                selectedKey = key;
-                            }
-                            sql.close();
-                            return resolve(mainKey[selectedKey]);
+                            return resolve(rows);
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
