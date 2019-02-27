@@ -26,10 +26,14 @@ exports.search = function(req) {
                         request.input('Type', sql.Int, req.body.type);
 
                         request.execute("[dbo].sp_Search").then(function(recordsets) {
-
-                            console.log(recordsets);
                             let rows = recordsets.recordset;
-                            return resolve(rows);
+                            var mainKey = rows[0];
+                            var selectedKey;
+                            for (var key in mainKey) {
+                                selectedKey = key;
+                            }
+                            sql.close();
+                            return resolve(mainKey[selectedKey]);
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
