@@ -96,6 +96,8 @@ exports.registerContractor = function(req) {
             request.input('hire', sql.Bit, null);
             request.input('bid', sql.Bit, null);
             request.input('timeFrame', sql.VarChar(300), null);
+            request.input('license', sql.VarChar(50), req.body.license);
+            request.input('insurance', sql.Bit, req.body.insurance);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
@@ -160,6 +162,8 @@ exports.registerCustomer = function(req) {
             request.input('hire', sql.Bit, null);
             request.input('bid', sql.Bit, null);
             request.input('timeFrame', sql.VarChar(300), null);
+            request.input('license', sql.VarChar(50), null);
+            request.input('insurance', sql.Bit, null);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
