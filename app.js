@@ -11,6 +11,7 @@ var cors = require('cors');
 var indexRouter = require('./routes/index');
 var accountRouter = require('./routes/account');
 var servicesRouter = require('./routes/services');
+var searchesRouter = require('./routes/search');
 
 var app = express();
 
@@ -20,8 +21,8 @@ app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(bodyParser.json({limit:'50mb'})); 
-app.use(bodyParser.urlencoded({extended:true, limit:'50mb'}));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -30,6 +31,7 @@ app.use(cors({ origin: '*' }));
 app.use('/', indexRouter);
 app.use('/api/account', accountRouter);
 app.use('/api/services', servicesRouter);
+app.use('/api/search', searchesRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
