@@ -155,7 +155,7 @@ exports.registerCustomer = function(req) {
             request.input('state', sql.VarChar(100), req.body.state);
             request.input('city', sql.VarChar(100), req.body.city);
             request.input('zip', sql.VarChar(20), req.body.zip);
-            request.input('picUrl', sql.VarChar(300), null);
+            request.input('picUrl', sql.VarChar(300), req.body.photo);
             request.input('CertificateURL', sql.VarChar(300), null);
             request.input('budget', sql.VarChar(100), null);
             request.input('availability', sql.VarChar(100), null);
