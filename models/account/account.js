@@ -206,10 +206,12 @@ exports.upload = function(req) {
     return new Promise((resolve, reject) => { //return promise, callbacks are bad!
         console.log(req);
         if (req.file) {
+            var destination = req.file.destination;
+            var normalized = destination.substring('public/'.length)
             console.log(req.file);
-            return resolve({ response: req.file.destination + "/" + req.file.filename });
+            return resolve({ response: normalized + "/" + req.file.filename });
         } else {
-            return reject({ response: "Error uploading" })
+            return reject({ response: "Error uploading" });
         }
     });
 };
