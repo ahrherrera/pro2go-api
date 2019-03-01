@@ -1,6 +1,12 @@
 var config = require("../../controllers/mssql/mssqlconnector"),
     sql = require('mssql'),
-    jwt = require('jsonwebtoken');
+    jwt = require('jsonwebtoken'),
+    nodemailer = require('nodemailer');
+
+const keyPublishable = 'pk_test_Oi0s8V9Ep0SXVMCvYTPmDgrl';
+const keySecret = 'sk_test_xZnz2FqdtfdCh56p56axEftb';
+
+const stripe = require("stripe")(keySecret);
 
 //Module export returning a promise
 
@@ -255,6 +261,346 @@ exports.sendLocation = function(req) {
                         sql.close();
                         return reject(data);
                     });
+                }
+            });
+        } else {
+            // Unauthorized
+            data.msg.Code = 400;
+            data.msg.Message = "Unauthorized";
+            return reject(data);
+        }
+
+    });
+};
+
+exports.saveInformation = function(req) {
+    return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+
+        var conn = config.findConfig();
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+        const bearerHeader = req.headers['authorization'];
+        if (typeof bearerHeader !== 'undefined') {
+            const bearer = bearerHeader.split(' ');
+            const bearerToken = bearer[1];
+            req.token = bearerToken;
+            jwt.verify(req.token, 'Y2Ae7kXZ', (err, authData) => {
+                if (err) {
+                    data.msg.Code = 400;
+                    data.msg.Message = "Unauthorized";
+                    return reject(data);
+                } else {
+                    //Create customer Token
+
+                    if (authData.User.Profile.CustomerID != null) {
+                        //Update
+                        console.log("Updating...");
+                        var customerID = authData.User.Profile.CustomerID;
+                        console.log("Customer ID: " + customerID);
+                        stripe.customers.update(authData.User.Profile.CustomerID, {
+                                source: req.body.stripeToken
+                            },
+                            function(err, customer) {
+                                if (!err) {
+                                    sql.connect(conn).then(function() {
+                                        var request = new sql.Request();
+                                        request.input('ProfileID', sql.Int, authData.User.Profile.id);
+                                        request.input('token', sql.VarChar(100), customer.id);
+                                        request.execute("[dbo].sp_saveCustomerInfo").then(function(recordsets) {
+                                            sql.close();
+                                            let rows = recordsets.recordset;
+                                            var mainKey = rows[0];
+                                            var selectedKey;
+                                            for (var key in mainKey) {
+                                                selectedKey = key;
+                                            }
+
+                                            jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
+                                                data = {
+                                                    token: token
+                                                };
+                                                return resolve(data);
+                                            });
+                                        }).catch(function(err) {
+                                            data.msg.Code = 500;
+                                            data.msg.Message = err.message;
+                                            sql.close();
+                                            return reject(data);
+                                        });
+                                    }).catch(function(err) {
+                                        data.msg.Code = 500;
+                                        data.msg.Message = err.message;
+                                        sql.close();
+                                        return reject(data);
+                                    });
+                                } else {
+                                    console.log(err);
+                                    data.msg.Code = 400;
+                                    data.msg.Message = "Error updating cutomer";
+                                    return reject(data);
+                                }
+                            });
+                    } else {
+                        //Create
+                        stripe.customers.create({
+                            email: authData.User.Profile.Email,
+                            source: req.body.stripeToken
+                        }, function(err, customer) {
+                            //customer.id
+                            if (!err) {
+                                sql.connect(conn).then(function() {
+                                    var request = new sql.Request();
+                                    request.input('ProfileID', sql.Int, authData.User.Profile.id);
+                                    request.input('token', sql.VarChar(100), customer.id);
+
+
+                                    request.execute("[dbo].sp_saveCustomerInfo").then(function(recordsets) {
+                                        sql.close();
+
+                                        let rows = recordsets.recordset;
+                                        var mainKey = rows[0];
+                                        var selectedKey;
+                                        for (var key in mainKey) {
+                                            selectedKey = key;
+                                        }
+
+                                        jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
+                                            data = {
+                                                token: token
+                                            };
+                                            return resolve(data);
+                                        });
+                                    }).catch(function(err) {
+                                        data.msg.Code = 500;
+                                        data.msg.Message = err.message;
+                                        sql.close();
+                                        return reject(data);
+                                    });
+                                }).catch(function(err) {
+                                    data.msg.Code = 500;
+                                    data.msg.Message = err.message;
+                                    sql.close();
+                                    return reject(data);
+                                });
+                            } else {
+                                data.msg.Code = 400;
+                                data.msg.Message = "Error creating cutomer";
+                                return reject(data);
+                            }
+
+                        });
+                    }
+                }
+            });
+        } else {
+            // Unauthorized
+            data.msg.Code = 400;
+            data.msg.Message = "Unauthorized";
+            return reject(data);
+        }
+
+    });
+};
+
+exports.pay = function(req) {
+    return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+
+        var conn = config.findConfig();
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+        const bearerHeader = req.headers['authorization'];
+        if (typeof bearerHeader !== 'undefined') {
+            const bearer = bearerHeader.split(' ');
+            const bearerToken = bearer[1];
+            req.token = bearerToken;
+            jwt.verify(req.token, 'Y2Ae7kXZ', (err, authData) => {
+                if (err) {
+                    data.msg.Code = 400;
+                    data.msg.Message = "Unauthorized";
+                    return reject(data);
+                } else {
+
+                    //obtain the customer info
+
+                    sql.connect(conn).then(function() {
+                        var request = new sql.Request();
+                        request.input('ProfileID', sql.Int, authData.User.Profile.id);
+
+                        request.execute("[dbo].sp_Retrieve").then(function(recordsets) {
+                            sql.close();
+                            // return resolve(data);
+                            let rows = recordsets.recordset;
+                            var mainKey = rows[0];
+                            var selectedKey;
+                            for (var key in mainKey) {
+                                selectedKey = key;
+                            }
+
+                            var customerID = mainKey.customer_id;
+
+                            //Charge
+
+                            console.log(customerID);
+
+                            var amount;
+
+                            if (req.body.type == 0) {
+                                amount = 14.99 * 100;
+                            } else if (req.body.type == 1) {
+                                amount = 9.99 * 100;
+                            } else if (req.body.type == 2) {
+                                amount = 5.99 * 100;
+                            }
+
+                            stripe.charges.create({
+                                amount,
+                                description: req.body.description,
+                                currency: "usd",
+                                customer: customerID,
+                                receipt_email: authData.User.Profile.Email
+                            }).then(charge => {
+                                if (charge.paid == true) {
+
+                                    //Save Payment Info
+                                    sql.connect(conn).then(function() {
+                                        var request = new sql.Request();
+                                        request.input('ProfileID', sql.Int, authData.User.Profile.id);
+                                        request.input('charge', sql.VarChar(100), charge.id);
+                                        request.input('amount', sql.Money, amount / 100);
+                                        request.input('description', sql.VarChar(200), req.body.description);
+
+                                        request.execute("[dbo].sp_savePayment").then(function(recordsets) {
+                                            let rows = recordsets.recordset;
+                                            var mainKey = rows[0];
+                                            var selectedKey;
+                                            for (var key in mainKey) {
+                                                selectedKey = key;
+                                            }
+
+                                            jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
+                                                data = {
+                                                    message: "Charged Successfully",
+                                                    Estado: 1,
+                                                    token: token
+                                                };
+                                                return resolve(data);
+                                            });
+
+                                            sql.close();
+                                        }).catch(function(err) {
+                                            data.msg.Code = 500;
+                                            //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
+                                            data.msg.Message = err.message;
+                                            sql.close();
+                                            return reject(data);
+                                        });
+                                    }).catch(function(err) {
+                                        console.log(err);
+                                        data.msg.Code = 500;
+                                        data.msg.Message = err.message;
+                                        sql.close();
+                                        return reject(data);
+                                    });
+
+                                } else {
+                                    return resolve({ message: "Not charged", Estado: 0, payload: charge });
+                                }
+                            })
+
+
+                        }).catch(function(err) {
+                            console.log(err);
+                            data.msg.Code = 500;
+                            data.msg.Message = err.message;
+                            sql.close();
+                            return reject(data);
+                        });
+                    }).catch(function(err) {
+                        data.msg.Code = 500;
+                        data.msg.Message = err.message;
+                        sql.close();
+                        console.log(err);
+                        return reject(data);
+                    });
+
+
+                    //Create customer Token
+
+                    // stripe.customers.create({
+                    //     email: authData.User.Profile.Email,
+                    //     source: req.body.stripeToken
+                    // }, function (err, customer){
+                    //     //customer.id
+                    //     if(!err){
+                    //         sql.connect(conn).then(function() {
+                    //             var request = new sql.Request();
+                    //             request.input('ProfileID', sql.Int, authData.User.Profile.id);
+                    //             request.input('token', sql.VarChar(100), customer.id);
+
+                    //             request.execute("[dbo].sp_saveCustomerInfo").then(function(recordsets) {
+                    //                 sql.close();
+                    //                 return resolve(data);
+                    //             }).catch(function(err) {
+                    //                 data.msg.Code = 500;
+                    //                 data.msg.Message = err.message;
+                    //                 sql.close();
+                    //                 return reject(data);
+                    //             });
+                    //         }).catch(function(err) {
+                    //             data.msg.Code = 500;
+                    //             data.msg.Message = err.message;
+                    //             sql.close();
+                    //             return reject(data);
+                    //         });
+                    //     }else{
+                    //         data.msg.Code = 400;
+                    //         data.msg.Message = "Error creating cutomer";
+                    //         return reject(data);
+                    //     }
+
+                    // });
+                }
+            });
+        } else {
+            // Unauthorized
+            data.msg.Code = 400;
+            data.msg.Message = "Unauthorized";
+            return reject(data);
+        }
+
+    });
+};
+
+exports.getTokens = function(req) {
+    return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+
+        var conn = config.findConfig();
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+        const bearerHeader = req.headers['authorization'];
+        if (typeof bearerHeader !== 'undefined') {
+            const bearer = bearerHeader.split(' ');
+            const bearerToken = bearer[1];
+            req.token = bearerToken;
+            jwt.verify(req.token, 'Y2Ae7kXZ', (err, authData) => {
+                if (err) {
+                    data.msg.Code = 400;
+                    data.msg.Message = "Unauthorized";
+                    return reject(data);
+                } else {
+
+                    if (authData.User.Profile.CustomerID != null) {
+                        stripe.customers.retrieve(authData.User.Profile.CustomerID,
+                            function(err, customer) {
+                                if (!err) {
+                                    return resolve(customer.sources);
+                                } else {
+
+                                }
+                            });
+                    } else {
+                        return resolve({ Estado: 0, message: "User does not have registered yet" });
+                    }
                 }
             });
         } else {
