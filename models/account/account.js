@@ -522,43 +522,6 @@ exports.pay = function(req) {
                         console.log(err);
                         return reject(data);
                     });
-
-
-                    //Create customer Token
-
-                    // stripe.customers.create({
-                    //     email: authData.User.Profile.Email,
-                    //     source: req.body.stripeToken
-                    // }, function (err, customer){
-                    //     //customer.id
-                    //     if(!err){
-                    //         sql.connect(conn).then(function() {
-                    //             var request = new sql.Request();
-                    //             request.input('ProfileID', sql.Int, authData.User.Profile.id);
-                    //             request.input('token', sql.VarChar(100), customer.id);
-
-                    //             request.execute("[dbo].sp_saveCustomerInfo").then(function(recordsets) {
-                    //                 sql.close();
-                    //                 return resolve(data);
-                    //             }).catch(function(err) {
-                    //                 data.msg.Code = 500;
-                    //                 data.msg.Message = err.message;
-                    //                 sql.close();
-                    //                 return reject(data);
-                    //             });
-                    //         }).catch(function(err) {
-                    //             data.msg.Code = 500;
-                    //             data.msg.Message = err.message;
-                    //             sql.close();
-                    //             return reject(data);
-                    //         });
-                    //     }else{
-                    //         data.msg.Code = 400;
-                    //         data.msg.Message = "Error creating cutomer";
-                    //         return reject(data);
-                    //     }
-
-                    // });
                 }
             });
         } else {
@@ -611,4 +574,4 @@ exports.getTokens = function(req) {
         }
 
     });
-};
+}
