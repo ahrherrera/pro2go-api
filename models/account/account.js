@@ -575,3 +575,78 @@ exports.getTokens = function(req) {
 
     });
 }
+
+exports.updateCustomer = function(req) {
+    return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+
+        var conn = config.findConfig();
+
+        const bearerHeader = req.headers['authorization'];
+        if (typeof bearerHeader !== 'undefined') {
+            const bearer = bearerHeader.split(' ');
+            const bearerToken = bearer[1];
+            req.token = bearerToken;
+            jwt.verify(req.token, 'Y2Ae7kXZ', (err, authData) => {
+                if (err) {
+                    data.msg.Code = 400;
+                    data.msg.Message = "Unauthorized";
+                    return reject(data);
+                } else {
+
+                    sql.connect(conn).then(function() {
+                        var request = new sql.Request();
+                        request.input('ProfileID', sql.Int, authData.User.Profile.id);
+                        request.input('Phone', sql.NVarChar(15), req.body.phone);
+                        request.input('Email', sql.NVarChar(100), req.body.email);
+                        request.input('Address', sql.NVarChar(100), req.body.address);
+                        request.input('City', sql.NVarChar(100), req.body.city);
+                        request.input('State', sql.NVarChar(50), req.body.state);
+                        request.input('ZipCode', sql.VarChar(20), req.body.zip);
+
+                        request.execute("[dbo].[sp_UpdateCustomer]").then(function(recordsets) {
+                            let rows = recordsets.recordset;
+                            var mainKey = rows[0];
+                            var selectedKey;
+                            for (var key in mainKey) {
+                                selectedKey = key;
+                            }
+                            if (mainKey.Status == 0) {
+                                sql.close();
+                                data.msg.Code = 400;
+                                data.msg.Message = mainKey.Mensaje;
+                                return resolve(data);
+                            } else {
+                                sql.close();
+                                jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
+                                    data = {
+                                        token: token
+                                    };
+                                    return resolve(data);
+                                });
+
+                            }
+                        }).catch(function(err) {
+                            data.msg.Code = 500;
+                            data.msg.Message = err.message;
+                            sql.close();
+                            return reject(err);
+
+                        });
+
+                    }).catch(function(err) {
+                        sql.close();
+                        return reject(err);
+                    });
+                }
+            });
+        } else {
+            // Unauthorized
+            data.msg.Code = 400;
+            data.msg.Message = "Unauthorized";
+            return reject(data);
+        }
+
+    });
+};
