@@ -760,7 +760,13 @@ exports.updateAvailability = function(req) {
                             for (var key in mainKey) {
                                 selectedKey = key;
                             }
-                            return resolve(selectedKey);
+                            sql.close();
+                            jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
+                                data = {
+                                    token: token
+                                };
+                                return resolve(data);
+                            });
 
                         }).catch(function(err) {
                             data.msg.Code = 500;
