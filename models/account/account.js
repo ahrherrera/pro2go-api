@@ -679,9 +679,9 @@ exports.updateContractor = function(req) {
                         request.input('City', sql.NVarChar(100), req.body.city);
                         request.input('State', sql.NVarChar(50), req.body.state);
                         request.input('ZipCode', sql.VarChar(20), req.body.zip);
-                        request.input('Insurance', sql.VarChar(20), req.body.insurance);
-                        request.input('License', sql.VarChar(20), req.body.license);
-                        request.input('Budget', sql.VarChar(20), req.body.budget);
+                        request.input('Insurance', sql.Bit, req.body.insurance);
+                        request.input('License', sql.VarChar(50), req.body.license);
+                        request.input('Budget', sql.Money, req.body.budget);
 
                         request.execute("[dbo].[sp_UpdateContractor]").then(function(recordsets) {
                             let rows = recordsets.recordset;
@@ -705,6 +705,63 @@ exports.updateContractor = function(req) {
                                 });
 
                             }
+                        }).catch(function(err) {
+                            data.msg.Code = 500;
+                            data.msg.Message = err.message;
+                            sql.close();
+                            return reject(err);
+
+                        });
+
+                    }).catch(function(err) {
+                        sql.close();
+                        return reject(err);
+                    });
+                }
+            });
+        } else {
+            // Unauthorized
+            data.msg.Code = 400;
+            data.msg.Message = "Unauthorized";
+            return reject(data);
+        }
+
+    });
+};
+
+exports.updateAvailability = function(req) {
+    return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+
+        var conn = config.findConfig();
+
+        const bearerHeader = req.headers['authorization'];
+        if (typeof bearerHeader !== 'undefined') {
+            const bearer = bearerHeader.split(' ');
+            const bearerToken = bearer[1];
+            req.token = bearerToken;
+            jwt.verify(req.token, 'Y2Ae7kXZ', (err, authData) => {
+                if (err) {
+                    data.msg.Code = 400;
+                    data.msg.Message = "Unauthorized";
+                    return reject(data);
+                } else {
+
+                    sql.connect(conn).then(function() {
+                        var request = new sql.Request();
+                        request.input('ProfileID', sql.Int, authData.User.Profile.id);
+                        request.input('availability', sql.Bit, req.body.availability);
+
+                        request.execute("[dbo].[sp_changeAvailability]").then(function(recordsets) {
+                            let rows = recordsets.recordset;
+                            var mainKey = rows[0];
+                            var selectedKey;
+                            for (var key in mainKey) {
+                                selectedKey = key;
+                            }
+                            return resolve(selectedKey);
+
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             data.msg.Message = err.message;
