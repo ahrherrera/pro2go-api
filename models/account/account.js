@@ -751,7 +751,7 @@ exports.updateAvailability = function(req) {
                     sql.connect(conn).then(function() {
                         var request = new sql.Request();
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
-                        request.input('availability', sql.Bit, req.body.availability);
+                        request.input('availability', sql.Int, req.body.availability);
 
                         request.execute("[dbo].[sp_changeAvailability]").then(function(recordsets) {
                             let rows = recordsets.recordset;
