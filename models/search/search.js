@@ -24,6 +24,7 @@ exports.search = function(req) {
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
                         request.input('Service', sql.Int, req.body.service);
                         request.input('Type', sql.Int, req.body.type);
+                        request.input('Description', sql.VarChar(500), req.body.description);
 
                         request.execute("[dbo].sp_Search").then(function(recordsets) {
                             let rows = recordsets.recordset;
