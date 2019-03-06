@@ -3,6 +3,12 @@ var config = require("../../controllers/mssql/mssqlconnector"),
     jwt = require('jsonwebtoken');
 var admin = require('firebase-admin');
 
+var serviceAccount = require('../../iglesiatechapp-firebase.json');
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
 exports.getInvitations = function(req) {
     return new Promise((resolve, reject) => {
         var data = {};
