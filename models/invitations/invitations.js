@@ -147,6 +147,38 @@ exports.invite = function(req) {
                                 selectedKey = key;
                             }
                             sql.close();
+
+                            // Send Push Notification to other User
+
+                            getDevices(req.body.profileID).then(data => {
+
+                                var tokenDev = JSON.parse(data).RegistrationID;
+
+                                var message = {
+                                    notification: {
+                                        title: 'Nombre',
+                                        body: 'You have a new request from a Customer',
+                                    },
+                                    data: {
+                                        score: '850',
+                                        time: '2:45'
+                                    },
+                                    token: tokenDev
+                                };
+
+                                // Send a message to the device corresponding to the provided
+                                // registration token.
+                                admin.messaging().send(message)
+                                    .then((response) => {
+                                        // Response is a message ID string.
+                                        console.log('Successfully sent message:', response);
+                                    })
+                                    .catch((error) => {
+                                        console.log('Error sending message:', error);
+                                    });
+                            });
+
+
                             return resolve(mainKey[selectedKey]);
                         }).catch(function(err) {
                             data.msg.Code = 500;
@@ -202,7 +234,7 @@ exports.confirm = function(req) {
                                 selectedKey = key;
                             }
                             sql.close();
-                            return resolve(mainKey[selectedKey])
+                            return resolve(mainKey[selectedKey]);
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
@@ -224,5 +256,37 @@ exports.confirm = function(req) {
             data.msg.Message = "Unauthorized";
             return reject(data);
         }
+    });
+}
+
+function getDevices(ProfileID) {
+    return new Promise((resolve, reject) => {
+        var conn = config.findConfig();
+        sql.connect(conn).then(function() {
+            var request = new sql.Request();
+            request.input('ProfileID', ProfileID);
+
+            request.execute("[dbo].[sp_getDevice]").then(function(recordsets) {
+                let rows = recordsets.recordset;
+                var mainKey = rows[0];
+                var selectedKey;
+                for (var key in mainKey) {
+                    selectedKey = key;
+                }
+                sql.close();
+                return resolve(mainKey[selectedKey]);
+
+            }).catch(function(err) {
+                data.msg.Code = 500;
+                data.msg.Message = err.message;
+                sql.close();
+                return reject(err);
+
+            });
+
+        }).catch(function(err) {
+            sql.close();
+            return reject(err);
+        });
     });
 }
