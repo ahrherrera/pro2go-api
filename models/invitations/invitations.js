@@ -1,6 +1,7 @@
 var config = require("../../controllers/mssql/mssqlconnector"),
     sql = require('mssql'),
     jwt = require('jsonwebtoken');
+var admin = require('firebase-admin');
 
 exports.getInvitations = function(req) {
     return new Promise((resolve, reject) => {
