@@ -219,7 +219,7 @@ exports.invite = function(req) {
                                         body: 'You have a new request from a Customer',
                                     },
                                     data: {
-                                        type: TypeNotification.INVITE
+                                        type: String(TypeNotification.INVITE)
                                     },
                                     token: tokenDev
                                 };
@@ -309,7 +309,7 @@ exports.confirm = function(req) {
                                         body: bodyD,
                                     },
                                     data: {
-                                        type: TypeNotification.CONFIRMATION
+                                        type: String(TypeNotification.CONFIRMATION)
                                     },
                                     token: tokenDev
                                 };
