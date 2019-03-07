@@ -305,7 +305,7 @@ exports.confirm = function(req) {
 
                                 var message = {
                                     notification: {
-                                        title: 'New request!',
+                                        title: 'A Contractor responded your request',
                                         body: bodyD,
                                     },
                                     data: {
