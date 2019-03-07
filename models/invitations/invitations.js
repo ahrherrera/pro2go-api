@@ -9,6 +9,11 @@ admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
 
+const TypeNotification = {
+    INVITE: 0,
+    CONFIRMATION: 1
+}
+
 exports.getInvitations = function(req) {
     return new Promise((resolve, reject) => {
         var data = {};
@@ -156,12 +161,11 @@ exports.invite = function(req) {
 
                                 var message = {
                                     notification: {
-                                        title: 'Nombre',
+                                        title: 'New Request arrived!',
                                         body: 'You have a new request from a Customer',
                                     },
                                     data: {
-                                        score: '850',
-                                        time: '2:45'
+                                        type: TypeNotification.INVITE
                                     },
                                     token: tokenDev
                                 };
@@ -234,10 +238,44 @@ exports.confirm = function(req) {
                                 selectedKey = key;
                             }
                             sql.close();
+
+                            getDevices(req.body.ProfileID).then(data => {
+                                var tokenDev = JSON.parse(data).RegistrationID;
+
+                                var bodyD;
+                                if (req.body.status == 1) {
+                                    body = "Contractor has confirmed the request";
+                                } else {
+                                    body = "Contractor has declined the request";
+                                }
+
+                                var message = {
+                                    notification: {
+                                        title: 'New request!',
+                                        body: bodyD,
+                                    },
+                                    data: {
+                                        type: TypeNotification.CONFIRMATION
+                                    },
+                                    token: tokenDev
+                                };
+
+                                // Send a message to the device corresponding to the provided
+                                // registration token.
+                                admin.messaging().send(message)
+                                    .then((response) => {
+                                        // Response is a message ID string.
+                                        console.log('Successfully sent message:', response);
+                                    })
+                                    .catch((error) => {
+                                        console.log('Error sending message:', error);
+                                    });
+                            })
+
+
                             return resolve(mainKey[selectedKey]);
                         }).catch(function(err) {
                             data.msg.Code = 500;
-                            //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                             data.msg.Message = err.message;
                             sql.close();
                             return reject(data);
