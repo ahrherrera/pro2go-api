@@ -605,10 +605,12 @@ exports.updateCustomer = function(req) {
                         request.input('State', sql.NVarChar(50), req.body.state);
                         request.input('ZipCode', sql.VarChar(20), req.body.zip);
 
-                        if (req.body.pic != null) {
+                        if (req.body.pic != "null") {
                             request.input('picUrl', sql.NVarChar(300), req.body.pic);
+                            console.log("Setting picture");
                         } else {
                             request.input('picUrl', sql.NVarChar(300), 'N/A');
+                            console.log("Setting null");
                         }
 
                         request.execute("[dbo].[sp_UpdateCustomer]").then(function(recordsets) {
@@ -689,7 +691,7 @@ exports.updateContractor = function(req) {
                         request.input('License', sql.VarChar(50), req.body.license);
                         request.input('Budget', sql.Money, req.body.budget);
 
-                        if (req.body.pic != null) {
+                        if (req.body.pic != "null") {
                             request.input('picUrl', sql.NVarChar(300), req.body.pic);
                         } else {
                             request.input('picUrl', sql.NVarChar(300), 'N/A');
