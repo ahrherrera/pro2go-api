@@ -8,6 +8,14 @@ const keySecret = 'sk_test_xZnz2FqdtfdCh56p56axEftb';
 
 const stripe = require("stripe")(keySecret);
 
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'thefreeagent.app@gmail.com',
+        pass: 'admine2O'
+    }
+});
+
 //Module export returning a promise
 
 exports.testConnection = function(req) {
@@ -851,6 +859,178 @@ exports.updateDevice = function(req) {
                     }).catch(function(err) {
                         sql.close();
                         return reject(err);
+                    });
+                }
+            });
+        } else {
+            // Unauthorized
+            data.msg.Code = 400;
+            data.msg.Message = "Unauthorized";
+            return reject(data);
+        }
+
+    });
+};
+exports.verifyCode = function(req) {
+    return new Promise((resolve, reject) => {
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+
+        var conn = config.findConfig();
+
+
+        sql.connect(conn).then(function() {
+            var request = new sql.Request();
+            request.input('Code', sql.VarChar(6), req.body.code);
+            request.input('User', sql.Int, req.body.user);
+
+            request.execute("dbo.sp_verifyCode").then(function(recordsets) {
+                let rows = recordsets.recordset;
+                sql.close();
+                return resolve(rows[0]);
+            }).catch(function(err) {
+                data.msg.Code = 500;
+                //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
+                data.msg.Message = err.message;
+                sql.close();
+                return reject(data);
+            });
+        }).catch(function(err) {
+            data.msg.Code = 500;
+            data.msg.Message = err.message;
+            sql.close();
+            return reject(data);
+        });
+    });
+}
+
+exports.resetPassword = function(req) {
+    return new Promise((resolve, reject) => {
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+
+        var conn = config.findConfig();
+
+
+        sql.connect(conn).then(function() {
+            var request = new sql.Request();
+            request.input('Code', sql.VarChar(6), req.body.code);
+            request.input('Password', sql.VarChar(100), req.body.password);
+            request.input('User', sql.Int, req.body.user);
+
+            request.execute("dbo.sp_ResetPassword").then(function(recordsets) {
+                let rows = recordsets.recordset;
+                sql.close();
+
+                //Antes de enviar la respuesta, enviar el email
+
+                return resolve(rows[0]);
+            }).catch(function(err) {
+                data.msg.Code = 500;
+                //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
+                data.msg.Message = err.message;
+                sql.close();
+                return reject(data);
+            });
+        }).catch(function(err) {
+            data.msg.Code = 500;
+            data.msg.Message = err.message;
+            sql.close();
+            return reject(data);
+        });
+    });
+}
+
+exports.sendCode = function(req) {
+    return new Promise((resolve, reject) => {
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+
+        var conn = config.findConfig();
+
+
+        sql.connect(conn).then(function() {
+            var request = new sql.Request();
+            request.input('Email', sql.VarChar(100), req.body.email);
+
+            request.execute("dbo.sp_SendCode").then(function(recordsets) {
+                let rows = recordsets.recordset;
+                sql.close();
+
+                //Antes de enviar la respuesta, enviar el email
+
+                if (rows[0].Estado) {
+                    const mailOptions = {
+                        from: 'thefreeagent.app@gmail.com', // sender address
+                        to: req.body.email, // list of receivers
+                        subject: 'Your verification code to Reset Your Password', // Subject line
+                        html: '<p style="Margin-top: 0;Margin-bottom: 20px;text-align: center;"><span style="color:#000">Your verification code is&nbsp;<strong>' + rows[0].Reset_CODE + '</strong><br /><br />Return to the app and type this code.</span></p>' // plain text body
+                    };
+
+                    transporter.sendMail(mailOptions, function(err, info) {
+                        if (err)
+                            console.log(err);
+                        else
+                            console.log(info);
+                    });
+                }
+
+                return resolve(rows[0]);
+            }).catch(function(err) {
+                data.msg.Code = 500;
+                //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
+                data.msg.Message = err.message;
+                sql.close();
+                return reject(data);
+            });
+        }).catch(function(err) {
+            data.msg.Code = 500;
+            data.msg.Message = err.message;
+            sql.close();
+            return reject(data);
+        });
+    });
+}
+
+exports.changePassword = function(req) {
+    return new Promise((resolve, reject) => { //return promise, callbacks are bad!
+
+        var conn = config.findConfig();
+        var data = {};
+        data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
+        const bearerHeader = req.headers['authorization'];
+        if (typeof bearerHeader !== 'undefined') {
+            const bearer = bearerHeader.split(' ');
+            const bearerToken = bearer[1];
+            req.token = bearerToken;
+            jwt.verify(req.token, 'Y2Ae7kXZ', (err, authData) => {
+                if (err) {
+                    data.msg.Code = 400;
+                    data.msg.Message = "Unauthorized";
+                    return reject(data);
+                } else {
+                    sql.connect(conn).then(function() {
+                        var request = new sql.Request();
+                        request.input('ID', sql.Int, authData.User.UserID);
+                        request.input('ActualPassword', sql.VarChar(100), req.body.oldPass);
+                        request.input('NewPassword', sql.VarChar(100), req.body.newPass);
+
+                        request.execute("[dbo].sp_ChangePassword").then(function(recordsets) {
+                            let rows = recordsets.recordset;
+                            sql.close();
+                            return resolve(rows[0]);
+                        }).catch(function(err) {
+                            data.msg.Code = 500;
+                            //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
+                            data.msg.Message = err.message;
+                            sql.close();
+                            return reject(data);
+                        });
+                    }).catch(function(err) {
+                        data.msg.Code = 500;
+                        data.msg.Message = err.message;
+                        sql.close();
+                        return reject(data);
                     });
                 }
             });
