@@ -89,6 +89,8 @@ exports.registerContractor = function(req) {
         var data = {};
         data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
 
+        console.log("Services", req.body.Services);
+
         var conn = config.findConfig();
         sql.connect(conn).then(function() {
             var request = new sql.Request();

@@ -221,6 +221,11 @@ exports.invite = function(req) {
                                     data: {
                                         type: String(TypeNotification.INVITE)
                                     },
+                                    android: {
+                                        notification: {
+                                            clickAction: "FCM_PLUGIN_ACTIVITY"
+                                        }
+                                    },
                                     token: tokenDev
                                 };
 
@@ -310,6 +315,11 @@ exports.confirm = function(req) {
                                     },
                                     data: {
                                         type: String(TypeNotification.CONFIRMATION)
+                                    },
+                                    android: {
+                                        notification: {
+                                            clickAction: "FCM_PLUGIN_ACTIVITY"
+                                        }
                                     },
                                     token: tokenDev
                                 };
