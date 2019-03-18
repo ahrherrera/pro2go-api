@@ -114,6 +114,7 @@ exports.registerContractor = function(req) {
             request.input('timeFrame', sql.VarChar(300), null);
             request.input('license', sql.VarChar(50), req.body.license);
             request.input('insurance', sql.Bit, req.body.insurance);
+            request.input('type', sql.Int, req.body.Stype);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
