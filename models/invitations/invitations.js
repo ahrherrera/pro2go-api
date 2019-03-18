@@ -212,6 +212,7 @@ exports.invite = function(req) {
                             getDevices(req.body.profileID).then(data => {
 
                                 var tokenDev = JSON.parse(data).RegistrationID;
+                                console.log(tokenDev);
 
                                 var message = {
                                     notification: {
