@@ -23,13 +23,13 @@ exports.testConnection = function(req) {
 
         var conn = config.findConfig();
 
-        sql.connect(conn).then(function() {
+        conn.connect().then(function() {
             console.log(req);
-            sql.close();
+            conn.close();
             return resolve('Connection successful');
 
         }).catch(function(err) {
-            sql.close();
+            conn.close();
             return reject(err);
         })
     });
@@ -42,8 +42,8 @@ exports.login = function(req) {
 
         var conn = config.findConfig();
 
-        sql.connect(conn).then(function() {
-            var request = new sql.Request();
+        conn.connect().then(function() {
+            var request = new sql.Request(conn);
             request.input('Username', sql.VarChar(50), req.body.Username);
             request.input('Password', sql.VarChar(100), req.body.Password);
 
@@ -55,12 +55,12 @@ exports.login = function(req) {
                     selectedKey = key;
                 }
                 if (mainKey.Status == 0) {
-                    sql.close();
+                    conn.close();
                     data.msg.Code = 400;
                     data.msg.Message = mainKey.Mensaje;
                     return resolve(data);
                 } else {
-                    sql.close();
+                    conn.close();
                     jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
                         data = {
                             token: token
@@ -72,13 +72,13 @@ exports.login = function(req) {
             }).catch(function(err) {
                 data.msg.Code = 500;
                 data.msg.Message = err.message;
-                sql.close();
+                conn.close();
                 return reject(err);
 
             });
 
         }).catch(function(err) {
-            sql.close();
+            conn.close();
             return reject(err);
         });
     });
@@ -92,8 +92,8 @@ exports.registerContractor = function(req) {
         console.log("Services", req.body.Services);
 
         var conn = config.findConfig();
-        sql.connect(conn).then(function() {
-            var request = new sql.Request();
+        conn.connect().then(function() {
+            var request = new sql.Request(conn);
             request.input('Names', sql.VarChar(150), req.body.Names);
             request.input('Email', sql.VarChar(100), req.body.Email);
             request.input('phone', sql.VarChar(15), req.body.phone);
@@ -126,7 +126,7 @@ exports.registerContractor = function(req) {
                 if (mainKey.message == "Username already exists") {
                     data.msg.Code = 400;
                     data.msg.Message = mainKey.message;
-                    sql.close();
+                    conn.close();
                     return reject(err);
                 } else {
                     jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
@@ -135,19 +135,19 @@ exports.registerContractor = function(req) {
                         };
                         return resolve(data);
                     });
-                    sql.close();
+                    conn.close();
                 }
             }).catch(function(err) {
                 data.msg.Code = 500;
                 //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                 data.msg.Message = err.message;
-                sql.close();
+                conn.close();
                 return reject(err);
             });
         }).catch(function(err) {
             data.msg.Code = 500;
             data.msg.Message = err.message;
-            sql.close();
+            conn.close();
             return reject(err);
         });
     });
@@ -159,8 +159,8 @@ exports.registerCustomer = function(req) {
         data.msg = { Code: 200, Message: 'Exito!', Tipo: 'n/a' };
 
         var conn = config.findConfig();
-        sql.connect(conn).then(function() {
-            var request = new sql.Request();
+        conn.connect().then(function() {
+            var request = new sql.Request(conn);
             request.input('Names', sql.VarChar(150), req.body.Names);
             request.input('Email', sql.VarChar(100), req.body.Email);
             request.input('phone', sql.VarChar(15), req.body.phone);
@@ -181,6 +181,7 @@ exports.registerCustomer = function(req) {
             request.input('timeFrame', sql.VarChar(300), null);
             request.input('license', sql.VarChar(50), null);
             request.input('insurance', sql.Bit, null);
+            request.input('type', sql.Int, null);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
@@ -189,10 +190,10 @@ exports.registerCustomer = function(req) {
                 for (var key in mainKey) {
                     selectedKey = key;
                 }
-                if (mainKey.message == "Username already exists") {
+                if (mainKey[selectedKey].message == "Username already exists") {
                     data.msg.Code = 400;
-                    data.msg.Message = mainKey.message;
-                    sql.close();
+                    data.msg.Message = mainKey[selectedKey].message;
+                    conn.close();
                     return reject(err);
                 } else {
                     jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
@@ -201,19 +202,19 @@ exports.registerCustomer = function(req) {
                         };
                         return resolve(data);
                     });
-                    sql.close();
+                    conn.close();
                 }
             }).catch(function(err) {
                 data.msg.Code = 500;
                 //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                 data.msg.Message = err.message;
-                sql.close();
+                conn.close();
                 return reject(err);
             });
         }).catch(function(err) {
             data.msg.Code = 500;
             data.msg.Message = err.message;
-            sql.close();
+            conn.close();
             return reject(err);
         });
     });
@@ -250,26 +251,26 @@ exports.sendLocation = function(req) {
                     data.msg.Message = "Unauthorized";
                     return reject(data);
                 } else {
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('profileID', sql.Int, authData.User.Profile.id);
                         request.input('Latitude', sql.Decimal(9, 6), req.body.lat);
                         request.input('Longitude', sql.Decimal(9, 6), req.body.lng);
 
                         request.execute("[dbo].sp_updateLocation").then(function(recordsets) {
-                            sql.close();
+                            conn.close();
                             return resolve(data);
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(data);
                         });
                     }).catch(function(err) {
                         data.msg.Code = 500;
                         data.msg.Message = err.message;
-                        sql.close();
+                        conn.close();
                         return reject(data);
                     });
                 }
@@ -313,12 +314,12 @@ exports.saveInformation = function(req) {
                             },
                             function(err, customer) {
                                 if (!err) {
-                                    sql.connect(conn).then(function() {
-                                        var request = new sql.Request();
+                                    conn.connect().then(function() {
+                                        var request = new sql.Request(conn);
                                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
                                         request.input('token', sql.VarChar(100), customer.id);
                                         request.execute("[dbo].sp_saveCustomerInfo").then(function(recordsets) {
-                                            sql.close();
+                                            conn.close();
                                             let rows = recordsets.recordset;
                                             var mainKey = rows[0];
                                             var selectedKey;
@@ -335,13 +336,13 @@ exports.saveInformation = function(req) {
                                         }).catch(function(err) {
                                             data.msg.Code = 500;
                                             data.msg.Message = err.message;
-                                            sql.close();
+                                            conn.close();
                                             return reject(data);
                                         });
                                     }).catch(function(err) {
                                         data.msg.Code = 500;
                                         data.msg.Message = err.message;
-                                        sql.close();
+                                        conn.close();
                                         return reject(data);
                                     });
                                 } else {
@@ -359,14 +360,14 @@ exports.saveInformation = function(req) {
                         }, function(err, customer) {
                             //customer.id
                             if (!err) {
-                                sql.connect(conn).then(function() {
-                                    var request = new sql.Request();
+                                conn.connect().then(function() {
+                                    var request = new sql.Request(conn);
                                     request.input('ProfileID', sql.Int, authData.User.Profile.id);
                                     request.input('token', sql.VarChar(100), customer.id);
 
 
                                     request.execute("[dbo].sp_saveCustomerInfo").then(function(recordsets) {
-                                        sql.close();
+                                        conn.close();
 
                                         let rows = recordsets.recordset;
                                         var mainKey = rows[0];
@@ -384,13 +385,13 @@ exports.saveInformation = function(req) {
                                     }).catch(function(err) {
                                         data.msg.Code = 500;
                                         data.msg.Message = err.message;
-                                        sql.close();
+                                        conn.close();
                                         return reject(data);
                                     });
                                 }).catch(function(err) {
                                     data.msg.Code = 500;
                                     data.msg.Message = err.message;
-                                    sql.close();
+                                    conn.close();
                                     return reject(data);
                                 });
                             } else {
@@ -433,12 +434,12 @@ exports.pay = function(req) {
 
                     //obtain the customer info
 
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
 
                         request.execute("[dbo].sp_Retrieve").then(function(recordsets) {
-                            sql.close();
+                            conn.close();
                             // return resolve(data);
                             let rows = recordsets.recordset;
                             var mainKey = rows[0];
@@ -473,8 +474,8 @@ exports.pay = function(req) {
                                 if (charge.paid == true) {
 
                                     //Save Payment Info
-                                    sql.connect(conn).then(function() {
-                                        var request = new sql.Request();
+                                    conn.connect().then(function() {
+                                        var request = new sql.Request(conn);
                                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
                                         request.input('charge', sql.VarChar(100), charge.id);
                                         request.input('amount', sql.Money, amount / 100);
@@ -497,19 +498,19 @@ exports.pay = function(req) {
                                                 return resolve(data);
                                             });
 
-                                            sql.close();
+                                            conn.close();
                                         }).catch(function(err) {
                                             data.msg.Code = 500;
                                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                                             data.msg.Message = err.message;
-                                            sql.close();
+                                            conn.close();
                                             return reject(data);
                                         });
                                     }).catch(function(err) {
                                         console.log(err);
                                         data.msg.Code = 500;
                                         data.msg.Message = err.message;
-                                        sql.close();
+                                        conn.close();
                                         return reject(data);
                                     });
 
@@ -523,13 +524,13 @@ exports.pay = function(req) {
                             console.log(err);
                             data.msg.Code = 500;
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(data);
                         });
                     }).catch(function(err) {
                         data.msg.Code = 500;
                         data.msg.Message = err.message;
-                        sql.close();
+                        conn.close();
                         console.log(err);
                         return reject(data);
                     });
@@ -606,8 +607,8 @@ exports.updateCustomer = function(req) {
                     return reject(data);
                 } else {
 
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
                         request.input('Phone', sql.NVarChar(15), req.body.phone);
                         request.input('Email', sql.NVarChar(100), req.body.email);
@@ -632,12 +633,12 @@ exports.updateCustomer = function(req) {
                                 selectedKey = key;
                             }
                             if (mainKey.Status == 0) {
-                                sql.close();
+                                conn.close();
                                 data.msg.Code = 400;
                                 data.msg.Message = mainKey.Mensaje;
                                 return resolve(data);
                             } else {
-                                sql.close();
+                                conn.close();
                                 jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
                                     data = {
                                         token: token
@@ -649,13 +650,13 @@ exports.updateCustomer = function(req) {
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(err);
 
                         });
 
                     }).catch(function(err) {
-                        sql.close();
+                        conn.close();
                         return reject(err);
                     });
                 }
@@ -689,8 +690,8 @@ exports.updateContractor = function(req) {
                     return reject(data);
                 } else {
 
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
                         request.input('Phone', sql.NVarChar(15), req.body.phone);
                         request.input('Email', sql.NVarChar(100), req.body.email);
@@ -716,12 +717,12 @@ exports.updateContractor = function(req) {
                                 selectedKey = key;
                             }
                             if (mainKey.Status == 0) {
-                                sql.close();
+                                conn.close();
                                 data.msg.Code = 400;
                                 data.msg.Message = mainKey.Mensaje;
                                 return resolve(data);
                             } else {
-                                sql.close();
+                                conn.close();
                                 jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
                                     data = {
                                         token: token
@@ -733,13 +734,13 @@ exports.updateContractor = function(req) {
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(err);
 
                         });
 
                     }).catch(function(err) {
-                        sql.close();
+                        conn.close();
                         return reject(err);
                     });
                 }
@@ -773,8 +774,8 @@ exports.updateAvailability = function(req) {
                     return reject(data);
                 } else {
 
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
                         request.input('availability', sql.Int, req.body.availability);
 
@@ -785,7 +786,7 @@ exports.updateAvailability = function(req) {
                             for (var key in mainKey) {
                                 selectedKey = key;
                             }
-                            sql.close();
+                            conn.close();
                             jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
                                 data = {
                                     token: token
@@ -796,13 +797,13 @@ exports.updateAvailability = function(req) {
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(err);
 
                         });
 
                     }).catch(function(err) {
-                        sql.close();
+                        conn.close();
                         return reject(err);
                     });
                 }
@@ -836,8 +837,8 @@ exports.updateDevice = function(req) {
                     return reject(data);
                 } else {
 
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
                         request.input('Token', sql.NVarChar(500), req.body.registration);
 
@@ -848,19 +849,19 @@ exports.updateDevice = function(req) {
                             // for (var key in mainKey) {
                             //     selectedKey = key;
                             // }
-                            sql.close();
+                            conn.close();
                             return resolve(data);
 
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(err);
 
                         });
 
                     }).catch(function(err) {
-                        sql.close();
+                        conn.close();
                         return reject(err);
                     });
                 }
@@ -882,26 +883,26 @@ exports.verifyCode = function(req) {
         var conn = config.findConfig();
 
 
-        sql.connect(conn).then(function() {
-            var request = new sql.Request();
+        conn.connect().then(function() {
+            var request = new sql.Request(conn);
             request.input('Code', sql.VarChar(6), req.body.code);
             request.input('User', sql.Int, req.body.user);
 
             request.execute("dbo.sp_verifyCode").then(function(recordsets) {
                 let rows = recordsets.recordset;
-                sql.close();
+                conn.close();
                 return resolve(rows[0]);
             }).catch(function(err) {
                 data.msg.Code = 500;
                 //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                 data.msg.Message = err.message;
-                sql.close();
+                conn.close();
                 return reject(data);
             });
         }).catch(function(err) {
             data.msg.Code = 500;
             data.msg.Message = err.message;
-            sql.close();
+            conn.close();
             return reject(data);
         });
     });
@@ -915,15 +916,15 @@ exports.resetPassword = function(req) {
         var conn = config.findConfig();
 
 
-        sql.connect(conn).then(function() {
-            var request = new sql.Request();
+        conn.connect().then(function() {
+            var request = new sql.Request(conn);
             request.input('Code', sql.VarChar(6), req.body.code);
             request.input('Password', sql.VarChar(100), req.body.password);
             request.input('User', sql.Int, req.body.user);
 
             request.execute("dbo.sp_ResetPassword").then(function(recordsets) {
                 let rows = recordsets.recordset;
-                sql.close();
+                conn.close();
 
                 //Antes de enviar la respuesta, enviar el email
 
@@ -932,13 +933,13 @@ exports.resetPassword = function(req) {
                 data.msg.Code = 500;
                 //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                 data.msg.Message = err.message;
-                sql.close();
+                conn.close();
                 return reject(data);
             });
         }).catch(function(err) {
             data.msg.Code = 500;
             data.msg.Message = err.message;
-            sql.close();
+            conn.close();
             return reject(data);
         });
     });
@@ -952,13 +953,13 @@ exports.sendCode = function(req) {
         var conn = config.findConfig();
 
 
-        sql.connect(conn).then(function() {
-            var request = new sql.Request();
+        conn.connect().then(function() {
+            var request = new sql.Request(conn);
             request.input('Email', sql.VarChar(100), req.body.email);
 
             request.execute("dbo.sp_SendCode").then(function(recordsets) {
                 let rows = recordsets.recordset;
-                sql.close();
+                conn.close();
 
                 //Antes de enviar la respuesta, enviar el email
 
@@ -983,13 +984,13 @@ exports.sendCode = function(req) {
                 data.msg.Code = 500;
                 //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                 data.msg.Message = err.message;
-                sql.close();
+                conn.close();
                 return reject(data);
             });
         }).catch(function(err) {
             data.msg.Code = 500;
             data.msg.Message = err.message;
-            sql.close();
+            conn.close();
             return reject(data);
         });
     });
@@ -1012,27 +1013,27 @@ exports.changePassword = function(req) {
                     data.msg.Message = "Unauthorized";
                     return reject(data);
                 } else {
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ID', sql.Int, authData.User.UserID);
                         request.input('ActualPassword', sql.VarChar(100), req.body.oldPass);
                         request.input('NewPassword', sql.VarChar(100), req.body.newPass);
 
                         request.execute("[dbo].sp_ChangePassword").then(function(recordsets) {
                             let rows = recordsets.recordset;
-                            sql.close();
+                            conn.close();
                             return resolve(rows[0]);
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(data);
                         });
                     }).catch(function(err) {
                         data.msg.Code = 500;
                         data.msg.Message = err.message;
-                        sql.close();
+                        conn.close();
                         return reject(data);
                     });
                 }

@@ -9,8 +9,8 @@ exports.getServices = function() {
 
         var conn = config.findConfig();
 
-        sql.connect(conn).then(function() {
-            var request = new sql.Request();
+        conn.connect().then(function() {
+            var request = new sql.Request(conn);
 
             request.execute("[dbo].sp_getServices").then(function(recordsets) {
                 let rows = recordsets.recordset;
@@ -20,20 +20,20 @@ exports.getServices = function() {
                     selectedKey = key;
                 }
                 var records = mainKey[selectedKey];
-                sql.close();
+                conn.close();
                 return resolve(records);
 
             }).catch(function(err) {
                 data.msg.Code = 500;
                 data.msg.Message = err.message;
-                sql.close();
+                conn.close();
                 return reject(data);
 
             });
         }).catch(function(err) {
             data.msg.Code = 500;
             data.msg.Message = err.message;
-            sql.close();
+            conn.close();
             return reject(data);
         });
     })

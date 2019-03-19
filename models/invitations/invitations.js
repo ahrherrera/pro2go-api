@@ -31,8 +31,8 @@ exports.getInvitations = function(req) {
                     data.msg.Message = "Unauthorized";
                     return reject(data);
                 } else {
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
 
                         request.execute("dbo.sp_getInvitations").then(function(recordsets) {
@@ -42,19 +42,19 @@ exports.getInvitations = function(req) {
                             for (var key in mainKey) {
                                 selectedKey = key;
                             }
-                            sql.close();
+                            conn.close();
                             return resolve(mainKey[selectedKey]);
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(data);
                         });
                     }).catch(function(err) {
                         data.msg.Code = 500;
                         data.msg.Message = err.message;
-                        sql.close();
+                        conn.close();
                         return reject(data);
                     });
                 }
@@ -85,8 +85,8 @@ exports.getSingleInvitation = function(req) {
                     data.msg.Message = "Unauthorized";
                     return reject(data);
                 } else {
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('InvitationID', sql.Int, req.body.id);
 
                         request.execute("dbo.[sp_getSingleInvitation]").then(function(recordsets) {
@@ -96,19 +96,19 @@ exports.getSingleInvitation = function(req) {
                             for (var key in mainKey) {
                                 selectedKey = key;
                             }
-                            sql.close();
+                            conn.close();
                             return resolve(mainKey[selectedKey]);
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(data);
                         });
                     }).catch(function(err) {
                         data.msg.Code = 500;
                         data.msg.Message = err.message;
-                        sql.close();
+                        conn.close();
                         return reject(data);
                     });
                 }
@@ -139,8 +139,8 @@ exports.getSentInvitations = function(req) {
                     data.msg.Message = "Unauthorized";
                     return reject(data);
                 } else {
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ProfileID', sql.Int, authData.User.Profile.id);
 
                         request.execute("dbo.sp_getSentInvitations").then(function(recordsets) {
@@ -150,19 +150,19 @@ exports.getSentInvitations = function(req) {
                             for (var key in mainKey) {
                                 selectedKey = key;
                             }
-                            sql.close();
+                            conn.close();
                             return resolve(mainKey[selectedKey]);
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(data);
                         });
                     }).catch(function(err) {
                         data.msg.Code = 500;
                         data.msg.Message = err.message;
-                        sql.close();
+                        conn.close();
                         return reject(data);
                     });
                 }
@@ -193,8 +193,8 @@ exports.invite = function(req) {
                     data.msg.Message = "Unauthorized";
                     return reject(data);
                 } else {
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('ProfileID', sql.Int, req.body.profileID);
                         request.input('SearchID', sql.Int, req.body.searchID);
 
@@ -205,7 +205,7 @@ exports.invite = function(req) {
                             for (var key in mainKey) {
                                 selectedKey = key;
                             }
-                            sql.close();
+                            conn.close();
 
                             // Send Push Notification to other User
 
@@ -248,13 +248,13 @@ exports.invite = function(req) {
                             data.msg.Code = 500;
                             //TODO: EN produccion cambiar mensajes a "Opps! Something ocurred."
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(data);
                         });
                     }).catch(function(err) {
                         data.msg.Code = 500;
                         data.msg.Message = err.message;
-                        sql.close();
+                        conn.close();
                         return reject(data);
                     });
                 }
@@ -285,8 +285,8 @@ exports.confirm = function(req) {
                     data.msg.Message = "Unauthorized";
                     return reject(data);
                 } else {
-                    sql.connect(conn).then(function() {
-                        var request = new sql.Request();
+                    conn.connect().then(function() {
+                        var request = new sql.Request(conn);
                         request.input('invitationID', sql.Int, req.body.invitationID);
                         request.input('status', sql.Int, req.body.status);
 
@@ -297,7 +297,7 @@ exports.confirm = function(req) {
                             for (var key in mainKey) {
                                 selectedKey = key;
                             }
-                            sql.close();
+                            conn.close();
 
                             getDevices(req.body.ProfileID).then(data => {
                                 var tokenDev = JSON.parse(data).RegistrationID;
@@ -342,13 +342,13 @@ exports.confirm = function(req) {
                         }).catch(function(err) {
                             data.msg.Code = 500;
                             data.msg.Message = err.message;
-                            sql.close();
+                            conn.close();
                             return reject(data);
                         });
                     }).catch(function(err) {
                         data.msg.Code = 500;
                         data.msg.Message = err.message;
-                        sql.close();
+                        conn.close();
                         return reject(data);
                     });
                 }
@@ -365,8 +365,8 @@ exports.confirm = function(req) {
 function getDevices(ProfileID) {
     return new Promise((resolve, reject) => {
         var conn = config.findConfig();
-        sql.connect(conn).then(function() {
-            var request = new sql.Request();
+        conn.connect().then(function() {
+            var request = new sql.Request(conn);
             request.input('ProfileID', ProfileID);
 
             request.execute("[dbo].[sp_getDevice]").then(function(recordsets) {
@@ -376,19 +376,19 @@ function getDevices(ProfileID) {
                 for (var key in mainKey) {
                     selectedKey = key;
                 }
-                sql.close();
+                conn.close();
                 return resolve(mainKey[selectedKey]);
 
             }).catch(function(err) {
                 data.msg.Code = 500;
                 data.msg.Message = err.message;
-                sql.close();
+                conn.close();
                 return reject(err);
 
             });
 
         }).catch(function(err) {
-            sql.close();
+            conn.close();
             return reject(err);
         });
     });

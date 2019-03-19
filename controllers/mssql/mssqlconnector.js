@@ -1,5 +1,8 @@
 var fs = require("fs"),
-    json;
+    json,
+    sql = require('mssql');
+
+var pool;
 
 function getPath(file) {
     var path = __dirname + '/' + file;
@@ -13,7 +16,15 @@ function getConnection() {
 
     var conn = {};
     conn = json_file[0].freeAgent;
-    return conn;
+
+    pool = new sql.ConnectionPool({
+        user: conn.user,
+        password: conn.password,
+        server: conn.server,
+        database: conn.database
+    });
+
+    return pool;
 }
 
 
