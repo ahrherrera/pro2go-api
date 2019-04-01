@@ -114,7 +114,7 @@ exports.registerContractor = function(req) {
             request.input('timeFrame', sql.VarChar(300), null);
             request.input('license', sql.VarChar(50), req.body.license);
             request.input('insurance', sql.Bit, req.body.insurance);
-            request.input('type', sql.Int, req.body.Stype);
+            request.input('ServiceTypes', sql.NVarChar(sql.MAX), req.body.Stype);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
@@ -169,7 +169,6 @@ exports.registerCustomer = function(req) {
             request.input('TypeID', sql.Int, req.body.type);
             request.input('username', sql.VarChar(150), req.body.username);
             request.input('password', sql.VarChar(100), req.body.password);
-            request.input('state', sql.VarChar(100), req.body.state);
             request.input('city', sql.VarChar(100), req.body.city);
             request.input('zip', sql.VarChar(20), req.body.zip);
             request.input('picUrl', sql.VarChar(300), req.body.photo);
@@ -181,7 +180,7 @@ exports.registerCustomer = function(req) {
             request.input('timeFrame', sql.VarChar(300), null);
             request.input('license', sql.VarChar(50), null);
             request.input('insurance', sql.Bit, null);
-            request.input('type', sql.Int, null);
+            request.input('ServiceTypes', sql.NVarChar(sql.MAX), null);
 
             request.execute("[dbo].sp_CreateUser").then(function(recordsets) {
                 let rows = recordsets.recordset;
