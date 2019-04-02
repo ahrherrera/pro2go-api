@@ -123,11 +123,16 @@ exports.registerContractor = function(req) {
                 for (var key in mainKey) {
                     selectedKey = key;
                 }
-                if (mainKey.message == "Username already exists") {
+
+                console.log(mainKey[selectedKey]);
+
+                let rdata = JSON.parse(mainKey[selectedKey]);
+                console.log(rdata);
+                if (rdata.estatus == 0) {
                     data.msg.Code = 400;
-                    data.msg.Message = mainKey.message;
+                    data.msg.Message = rdata.message;
                     conn.close();
-                    return reject(err);
+                    return reject(data);
                 } else {
                     jwt.sign(JSON.parse(mainKey[selectedKey]), 'Y2Ae7kXZ', (err, token) => {
                         data = {
