@@ -229,8 +229,7 @@ exports.upload = function(req) {
         console.log(req);
         if (req.file) {
             var destination = req.file.destination;
-            var normalized = destination.substring('public/'.length)
-            console.log(req.file);
+            var normalized = destination.substring('public/'.length);
             return resolve({ response: normalized + "/" + req.file.filename });
         } else {
             return reject({ response: "Error uploading" });
@@ -706,11 +705,24 @@ exports.updateContractor = function(req) {
                         request.input('Insurance', sql.Bit, req.body.insurance);
                         request.input('License', sql.VarChar(50), req.body.license);
                         request.input('Budget', sql.Money, req.body.budget);
+                        request.input('stype', sql.NVarChar(sql.MAX), req.body.stype);
 
                         if (req.body.pic != "null") {
                             request.input('picUrl', sql.NVarChar(300), req.body.pic);
                         } else {
                             request.input('picUrl', sql.NVarChar(300), 'N/A');
+                        }
+
+                        if (req.body.cert != "null") {
+                            request.input('certUrl', sql.NVarChar(300), req.body.cert);
+                        } else {
+                            request.input('certUrl', sql.NVarChar(300), 'N/A');
+                        }
+
+                        if (req.body.services != "null") {
+                            request.input('services', sql.NVarChar(300), req.body.services);
+                        } else {
+                            request.input('services', sql.NVarChar(300), 'N/A');
                         }
 
                         request.execute("[dbo].[sp_UpdateContractor]").then(function(recordsets) {
