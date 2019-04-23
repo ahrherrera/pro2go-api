@@ -13,6 +13,7 @@ var accountRouter = require('./routes/account');
 var servicesRouter = require('./routes/services');
 var searchesRouter = require('./routes/search');
 var invitationRouter = require('./routes/invitations');
+var ratingRouter = require('./routes/rating');
 
 var app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/account', accountRouter);
 app.use('/api/services', servicesRouter);
 app.use('/api/search', searchesRouter);
 app.use('/api/invitation', invitationRouter);
+app.use('/api/rating', ratingRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
