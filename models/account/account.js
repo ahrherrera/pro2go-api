@@ -172,6 +172,7 @@ exports.registerCustomer = function(req) {
             request.input('TypeID', sql.Int, req.body.type);
             request.input('username', sql.VarChar(150), req.body.username);
             request.input('password', sql.VarChar(100), req.body.password);
+            request.input('state', sql.VarChar(100), req.body.state);
             request.input('city', sql.VarChar(100), req.body.city);
             request.input('zip', sql.VarChar(20), req.body.zip);
             request.input('picUrl', sql.VarChar(300), req.body.photo);
