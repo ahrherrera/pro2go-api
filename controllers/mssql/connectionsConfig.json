@@ -1,9 +1,9 @@
 [{
     "freeAgent": {
-        "user": "userE2Pro2Go",
-        "password": "vuL460w%",
-        "server": "mi3-wsq3.a2hosting.com",
-        "database": "E2Outlook_Pro2GoApp",
+        "user": "jaimehere_iglesiatechbd",
+        "password": "C327da5f2D",
+        "server": "192.185.6.233",
+        "database": "jaimehere_Pro2Go",
         "options": {
             "encrypt": true
         }
